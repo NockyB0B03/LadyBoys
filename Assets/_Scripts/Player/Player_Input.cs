@@ -100,7 +100,7 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Health"",
+                    ""name"": ""Heal"",
                     ""type"": ""Button"",
                     ""id"": ""ae793ce9-c33b-4970-899b-9565154cf61c"",
                     ""expectedControlType"": ""Button"",
@@ -258,7 +258,7 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Health"",
+                    ""action"": ""Heal"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -288,7 +288,7 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
         m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
         m_Player_Punch = m_Player.FindAction("Punch", throwIfNotFound: true);
         m_Player_LegioniCelesti = m_Player.FindAction("LegioniCelesti", throwIfNotFound: true);
-        m_Player_Health = m_Player.FindAction("Health", throwIfNotFound: true);
+        m_Player_Heal = m_Player.FindAction("Heal", throwIfNotFound: true);
         m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
     }
 
@@ -359,7 +359,7 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Pause;
     private readonly InputAction m_Player_Punch;
     private readonly InputAction m_Player_LegioniCelesti;
-    private readonly InputAction m_Player_Health;
+    private readonly InputAction m_Player_Heal;
     private readonly InputAction m_Player_Interact;
     public struct PlayerActions
     {
@@ -373,7 +373,7 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
         public InputAction @Pause => m_Wrapper.m_Player_Pause;
         public InputAction @Punch => m_Wrapper.m_Player_Punch;
         public InputAction @LegioniCelesti => m_Wrapper.m_Player_LegioniCelesti;
-        public InputAction @Health => m_Wrapper.m_Player_Health;
+        public InputAction @Heal => m_Wrapper.m_Player_Heal;
         public InputAction @Interact => m_Wrapper.m_Player_Interact;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
@@ -408,9 +408,9 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
             @LegioniCelesti.started += instance.OnLegioniCelesti;
             @LegioniCelesti.performed += instance.OnLegioniCelesti;
             @LegioniCelesti.canceled += instance.OnLegioniCelesti;
-            @Health.started += instance.OnHealth;
-            @Health.performed += instance.OnHealth;
-            @Health.canceled += instance.OnHealth;
+            @Heal.started += instance.OnHeal;
+            @Heal.performed += instance.OnHeal;
+            @Heal.canceled += instance.OnHeal;
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
@@ -442,9 +442,9 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
             @LegioniCelesti.started -= instance.OnLegioniCelesti;
             @LegioniCelesti.performed -= instance.OnLegioniCelesti;
             @LegioniCelesti.canceled -= instance.OnLegioniCelesti;
-            @Health.started -= instance.OnHealth;
-            @Health.performed -= instance.OnHealth;
-            @Health.canceled -= instance.OnHealth;
+            @Heal.started -= instance.OnHeal;
+            @Heal.performed -= instance.OnHeal;
+            @Heal.canceled -= instance.OnHeal;
             @Interact.started -= instance.OnInteract;
             @Interact.performed -= instance.OnInteract;
             @Interact.canceled -= instance.OnInteract;
@@ -475,7 +475,7 @@ public partial class @Player_Input: IInputActionCollection2, IDisposable
         void OnPause(InputAction.CallbackContext context);
         void OnPunch(InputAction.CallbackContext context);
         void OnLegioniCelesti(InputAction.CallbackContext context);
-        void OnHealth(InputAction.CallbackContext context);
+        void OnHeal(InputAction.CallbackContext context);
         void OnInteract(InputAction.CallbackContext context);
     }
 }

@@ -78,7 +78,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Health",
+                    "name": "Heal",
                     "type": "Button",
                     "id": "ae793ce9-c33b-4970-899b-9565154cf61c",
                     "expectedControlType": "Button",
@@ -236,7 +236,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Health",
+                    "action": "Heal",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
