@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f22b277ab615b8542a0b9b990e383aba, type: 3}
+  m_Name: _Libri
+  m_EditorClassIdentifier: 
+  bulletPrefab: {fileID: 5931603411234716378, guid: 505c73fe49639f645b7952ef1797f899, type: 3}
+  damage: 15
+  speed: 20
+  gravityScale: 1
+  fireRate: 1
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 64

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -24,7 +25,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundMask;
 
+    [Header("Dash")]
+    [SerializeField] private float dashMultiplier = 3f;
+    [SerializeField] private float dashDuration = 0.2f;
+    [SerializeField] private float dashCooldown = 1.5f;
+
     private bool _isGrounded;
+
+    private bool _isDashing;
+    private bool _isDashOnCooldown;
+    private InputAction _dashAction;
 
     // Componenti
     private CharacterController _characterController;
@@ -60,12 +70,7 @@ public class PlayerController : MonoBehaviour
         _lookAction = map.FindAction("Look", throwIfNotFound: true);
         _jumpAction = map.FindAction("Jump", throwIfNotFound: true);
         _sprintAction = map.FindAction("Sprint", throwIfNotFound: true);
-        _fireAction = map.FindAction("Fire", throwIfNotFound: true);
-        _pauseAction = map.FindAction("Pause", throwIfNotFound: true);
-        _punchAction = map.FindAction("Punch", throwIfNotFound: true);
-        _legioniCelestiAction = map.FindAction("LegioniCelesti", throwIfNotFound: true);
-        _healAction = map.FindAction("Heal", throwIfNotFound: true);
-        _interactAction = map.FindAction("Interact", throwIfNotFound: true);
+        _dashAction = map.FindAction("Dash", throwIfNotFound: true);
 
         // Inizializzo yaw con la rotazione attuale del player
         _yaw = transform.eulerAngles.y;
@@ -81,12 +86,7 @@ public class PlayerController : MonoBehaviour
         _lookAction.Enable();
         _jumpAction.Enable();
         _sprintAction.Enable();
-        _fireAction.Enable();
-        _pauseAction.Enable();
-        _punchAction.Enable();
-        _legioniCelestiAction.Enable();
-        _healAction.Enable();
-        _interactAction.Enable();
+        _dashAction.Enable();
     }
 
     private void OnDisable()
@@ -95,12 +95,7 @@ public class PlayerController : MonoBehaviour
         _lookAction?.Disable();
         _jumpAction?.Disable();
         _sprintAction?.Disable();
-        _fireAction?.Disable();
-        _pauseAction?.Disable();
-        _punchAction?.Disable();
-        _legioniCelestiAction?.Disable();
-        _healAction?.Disable();
-        _interactAction?.Disable();
+        _dashAction?.Disable();
     }
 
     private void Update()
@@ -109,12 +104,7 @@ public class PlayerController : MonoBehaviour
         Move();
         Jump();
         Sprint();
-        Fire();
-        Pause();
-        Punch();
-        LegioniCelesti();
-        Heal();
-        Interact();
+        Dash();
 
         // Applico la gravità
         _isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundMask);
@@ -136,6 +126,9 @@ public class PlayerController : MonoBehaviour
 
         if (direction.magnitude >= 0.1f)
         {
+
+            if (_isDashing) return;
+
             // Ruoto il player nella direzione della camera
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _yaw;
             float smoothAngle = Mathf.SmoothDampAngle(
@@ -194,50 +187,44 @@ public class PlayerController : MonoBehaviour
     }
 
     // -----------------------------------------------------------------------
-    // FIRE — placeholder
+    // DASH
     // -----------------------------------------------------------------------
-    private void Fire()
+    private void Dash()
     {
-        // TODO
+        if (!_dashAction.WasPressedThisFrame()) return;
+        if (_isDashing || _isDashOnCooldown) return;
+
+        Vector2 input = _moveAction.ReadValue<Vector2>();
+
+        // Se il player non sta premendo nessun tasto, non esegue il dash
+        if (input.magnitude < 0.1f) return;
+
+        StartCoroutine(DashCoroutine(input));
     }
 
-    // -----------------------------------------------------------------------
-    // PAUSE — placeholder
-    // -----------------------------------------------------------------------
-    private void Pause()
+    private IEnumerator DashCoroutine(Vector2 input)
     {
-        // TODO
-    }
+        _isDashing = true;
+        _isDashOnCooldown = true;
 
-    // -----------------------------------------------------------------------
-    // PUNCH — placeholder
-    // -----------------------------------------------------------------------
-    private void Punch()
-    {
-        // TODO
-    }
+        float dashSpeed = normalSpeed * dashMultiplier;
+        float elapsed = 0f;
 
-    // -----------------------------------------------------------------------
-    // LEGIONI CELESTI — placeholder
-    // -----------------------------------------------------------------------
-    private void LegioniCelesti()
-    {
-        // TODO
-    }
+        // Calcolo la direzione del dash basandomi sull'input e sulla rotazione della camera
+        float targetAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg + _yaw;
+        Vector3 dashDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
-    // -----------------------------------------------------------------------
-    // HEAL — placeholder
-    // -----------------------------------------------------------------------
-    private void Heal()
-    {
-        // TODO
-    }
+        while (elapsed < dashDuration)
+        {
+            _characterController.Move(dashDirection.normalized * dashSpeed * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
 
-    // -----------------------------------------------------------------------
-    // INTERACT — placeholder
-    // -----------------------------------------------------------------------
-    private void Interact()
-    {
-        // TODO
+        _isDashing = false;
+
+        // Attendo il cooldown prima di permettere un nuovo dash
+        yield return new WaitForSeconds(dashCooldown);
+        _isDashOnCooldown = false;
     }
 }
