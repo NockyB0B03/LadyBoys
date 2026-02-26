@@ -51,7 +51,7 @@ GameObject:
   - component: {fileID: -635516645179748874}
   m_Layer: 3
   m_Name: Dante
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -133,7 +133,7 @@ CapsuleCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2359640823591662652}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   m_Radius: 0.5
   m_Height: 2
@@ -246,7 +246,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentBulletData: {fileID: 11400000, guid: 867c7833e6f600d459a31ad936f00844, type: 2}
-  poolSize: 10
+  bulletPoolSize: 30
   spawnPoint: {fileID: 8565128415292001717}
   cameraTransform: {fileID: 8860873620767655021}
   launchAngle: 15
