@@ -10,12 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 977cbf19c162b784895e21e2d0ec04e4, type: 3}
-  m_Name: _DiavoliSpawner
+  m_Name: WaveData
   m_EditorClassIdentifier: 
-  prefab: {fileID: 5875370324481246939, guid: 8ab27c9d5a676d54b9aa9fefb721bca8, type: 3}
-  spawnCount: 5
-  minSpawnInterval: 0.5
-  maxSpawnInterval: 4
-  seed: 42
-  sphereCastRadius: 0.3
-  minDistanceBetweenSpawns: 1
+  spawnPrefab: {fileID: 5875370324481246939, guid: 8ab27c9d5a676d54b9aa9fefb721bca8, type: 3}
+  spawnCount: 10
