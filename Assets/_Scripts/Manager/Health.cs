@@ -83,6 +83,19 @@ public class Health : MonoBehaviour
     private void Die()
     {
         Debug.Log($"[Health] {gameObject.name} è morto.");
-        gameObject.SetActive(false);
+
+        if (team == Team.Player)
+        {
+            // Notifica il GameManager invece di disabilitare direttamente
+            if (GameManager.Instance != null)
+                GameManager.Instance.PlayerDied();
+            else
+                Debug.LogWarning("[Health] GameManager non trovato! Assicurati che esista in scena.");
+        }
+        else
+        {
+            // Nemici e Neutral: comportamento invariato
+            gameObject.SetActive(false);
+        }
     }
 }

@@ -1,24 +1,34 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LevelPortal : MonoBehaviour
 {
     [Header("Impostazioni Portale")]
-    [SerializeField] private string nextSceneName = "Level1";
     [SerializeField] private float delayBeforeLoad = 0.5f;
+
+    [Header("Layer")]
+    [SerializeField] private LayerMask playerLayer;
+
+    private bool _activated = false; // evita doppi trigger
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        Debug.Log($"[LevelPortal] Trigger colpito da: {other.gameObject.name} | Layer: {other.gameObject.layer} | Activated: {_activated}");
+
+        if (_activated) return;
+
+        if (((1 << other.gameObject.layer) & playerLayer) != 0)
         {
-            Debug.Log("Player ha raggiunto il portale! Caricamento del prossimo livello...");
-            Invoke("LoadNextLevel", delayBeforeLoad);
+            _activated = true;
+            Debug.Log("[LevelPortal] Player riconosciuto! Caricamento...");
+            Invoke(nameof(LoadNext), delayBeforeLoad);
         }
     }
 
-    private void LoadNextLevel()
+    private void LoadNext()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(nextSceneName);
+        if (GameManager.Instance != null)
+            GameManager.Instance.LoadNextLevel();
+        else
+            Debug.LogWarning("[LevelPortal] GameManager non trovato!");
     }
 }
