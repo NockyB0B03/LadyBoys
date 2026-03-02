@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 10185792036456359}
   - component: {fileID: 4536324814028825946}
   - component: {fileID: -3666653452591952686}
-  m_Layer: 3
+  m_Layer: 8
   m_Name: Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -127,4 +127,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36bdbff96279e4c41bccd73e2b65e586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ownerCollider: {fileID: 2144561798968360267, guid: 67df197a97dd4ba4a9f67b201461086f, type: 3}
+  lifetime: 5

@@ -315,7 +315,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pausePanel: {fileID: 5853602278025036738}
-  resumeButton: {fileID: 5853602278181116862}
+  resumeButton: {fileID: 0}
 --- !u!1 &5853602279474170282
 GameObject:
   m_ObjectHideFlags: 0

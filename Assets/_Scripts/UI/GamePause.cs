@@ -19,6 +19,10 @@ public class GamePause : MonoBehaviour
         _playerInput = new Player_Input();
         _playerInput.Player.Pause.performed += ctx => TogglePause();
 
+        // Trova il bottone automaticamente nel pausePanel
+        if (resumeButton == null && pausePanel != null)
+            resumeButton = pausePanel.GetComponentInChildren<Button>();
+
         if (resumeButton != null)
             resumeButton.onClick.AddListener(TogglePause);
 
