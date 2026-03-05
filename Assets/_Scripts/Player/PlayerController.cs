@@ -30,175 +30,137 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float dashCooldown = 1.5f;
 
-    private bool _isGrounded;
-
-    private bool _isDashing;
-    private bool _isDashOnCooldown;
-    private InputAction _dashAction;
-
-    // Componenti
     private CharacterController _characterController;
-    private PlayerInput _playerInput;
+    private Player_Input _playerInput;
+    private Animator _animator;
 
-    // Input Actions
     private InputAction _moveAction;
-    private InputAction _lookAction;
     private InputAction _jumpAction;
     private InputAction _sprintAction;
-    private InputAction _fireAction;
-    private InputAction _pauseAction;
-    private InputAction _punchAction;
-    private InputAction _legioniCelestiAction;
-    private InputAction _healAction;
-    private InputAction _interactAction;
+    private InputAction _dashAction;
 
-    // Stato interno
     private Vector3 _velocity;
-    private float _yaw;    // rotazione orizzontale camera
-    private float _pitch;  // rotazione verticale camera
-    private float _rotationVelocity;
+    private bool _isGrounded;
     private bool _isSprinting;
+    private bool _isDashing;
+    private bool _isDashOnCooldown;
+
+    private float _pitch;
+    private float _yaw;
 
     private void Awake()
     {
+        // 1. Riferimento al CharacterController (sullo stesso oggetto della capsula)
         _characterController = GetComponent<CharacterController>();
-        _playerInput = GetComponent<PlayerInput>();
 
-        // Recupero le action dalla action map "Player"
-        var map = _playerInput.actions.FindActionMap("Player", throwIfNotFound: true);
-        _moveAction = map.FindAction("Move", throwIfNotFound: true);
-        _lookAction = map.FindAction("Look", throwIfNotFound: true);
-        _jumpAction = map.FindAction("Jump", throwIfNotFound: true);
-        _sprintAction = map.FindAction("Sprint", throwIfNotFound: true);
-        _dashAction = map.FindAction("Dash", throwIfNotFound: true);
+        // 2. Inizializzazione dell'Input System
+        _playerInput = new Player_Input();
 
-        // Inizializzo yaw con la rotazione attuale del player
-        _yaw = transform.eulerAngles.y;
+        // 3. Collegamento delle Azioni (Assicurati che i nomi corrispondano al tuo Input Action Asset)
+        _moveAction = _playerInput.Player.Move;
+        _jumpAction = _playerInput.Player.Jump;
+        _sprintAction = _playerInput.Player.Sprint;
+        _dashAction = _playerInput.Player.Dash;
 
-        // Nascondo il cursore
+        // 4. Collegamento dell'Animator con Debug Log per verifica
+        // Cerca in questo oggetto e in tutti i figli (il modello FBX)
+        _animator = GetComponentInChildren<Animator>();
+
+        if (_animator == null)
+        {
+            Debug.LogError($"<color=red><b>[PlayerController]</b> Animator NON trovato su {gameObject.name} o nei figli! Controlla il modello FBX.</color>");
+        }
+        else
+        {
+            Debug.Log($"<color=green><b>[PlayerController]</b> Animator collegato con successo su: {_animator.gameObject.name}</color>");
+
+            // Se l'Avatar non è assegnato nell'inspector, Unity darà un warning qui
+            if (_animator.avatar == null)
+            {
+                Debug.LogWarning("[PlayerController] L'Animator ha un controller ma l'Avatar è NULL! Le animazioni non partiranno.");
+            }
+        }
+
+        // 5. Configurazione Mouse (per la telecamera)
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    private void OnEnable()
-    {
-        _moveAction.Enable();
-        _lookAction.Enable();
-        _jumpAction.Enable();
-        _sprintAction.Enable();
-        _dashAction.Enable();
-    }
-
-    private void OnDisable()
-    {
-        _moveAction?.Disable();
-        _lookAction?.Disable();
-        _jumpAction?.Disable();
-        _sprintAction?.Disable();
-        _dashAction?.Disable();
-    }
+    private void OnEnable() => _playerInput.Enable();
+    private void OnDisable() => _playerInput.Disable();
 
     private void Update()
     {
-        Look();
-        Move();
-        Jump();
-        Sprint();
+        GroundCheck();
+        HandleCamera();
+
+        if (!_isDashing)
+        {
+            Move();
+            Jump();
+        }
+
         Dash();
-
-        // Applico la gravità
-        _isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundMask);
-
-        if (_isGrounded && _velocity.y < 0f)
-            _velocity.y = -2f;
-
-        _velocity.y += gravity * Time.deltaTime;
-        _characterController.Move(new Vector3(0f, _velocity.y, 0f) * Time.deltaTime);
+        UpdateAnimationParameters();
     }
 
-    // -----------------------------------------------------------------------
-    // MOVE — WASD
-    // -----------------------------------------------------------------------
+    private void GroundCheck()
+    {
+        _isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundMask);
+        if (_isGrounded && _velocity.y < 0) _velocity.y = -2f;
+    }
+
+    private void HandleCamera()
+    {
+        Vector2 mouseDelta = Mouse.current.delta.ReadValue();
+
+        _yaw += mouseDelta.x * mouseSensitivity * 0.1f;
+        _pitch -= mouseDelta.y * mouseSensitivity * 0.1f;
+        _pitch = Mathf.Clamp(_pitch, minVerticalAngle, maxVerticalAngle);
+
+        Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+        Vector3 targetPosition = transform.position + Vector3.up * cameraHeight - (rotation * Vector3.forward * cameraDistance);
+
+        cameraTransform.position = targetPosition;
+        cameraTransform.rotation = rotation;
+    }
+
     private void Move()
     {
         Vector2 input = _moveAction.ReadValue<Vector2>();
-        Vector3 direction = new Vector3(input.x, 0f, input.y).normalized;
+        _isSprinting = _sprintAction.IsPressed();
 
-        if (direction.magnitude >= 0.1f)
+        float currentSpeed = _isSprinting ? normalSpeed * sprintMultiplier : normalSpeed;
+
+        if (input.magnitude >= 0.1f)
         {
+            // La rotazione ora segue la camera (Yaw)
+            float targetAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg + _yaw;
+            Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothTime);
 
-            if (_isDashing) return;
-
-            // Ruoto il player nella direzione della camera
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _yaw;
-            float smoothAngle = Mathf.SmoothDampAngle(
-                transform.eulerAngles.y,
-                targetAngle,
-                ref _rotationVelocity,
-                rotationSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, smoothAngle, 0f);
-
-            // Muovo nella direzione in cui punta la camera
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            float currentSpeed = _isSprinting ? normalSpeed * sprintMultiplier : normalSpeed;
+            Vector3 moveDir = targetRotation * Vector3.forward;
             _characterController.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
         }
+
+        _velocity.y += gravity * Time.deltaTime;
+        _characterController.Move(_velocity * Time.deltaTime);
     }
 
-    // -----------------------------------------------------------------------
-    // LOOK — Mouse: la camera orbita attorno al player
-    // -----------------------------------------------------------------------
-    private void Look()
-    {
-        Vector2 mouseDelta = _lookAction.ReadValue<Vector2>();
-
-        _yaw += mouseDelta.x * mouseSensitivity * Time.deltaTime * 100f;
-        _pitch -= mouseDelta.y * mouseSensitivity * Time.deltaTime * 100f;
-        _pitch = Mathf.Clamp(_pitch, minVerticalAngle, maxVerticalAngle);
-
-        if (cameraTransform == null) return;
-
-        // Calcolo la posizione della camera in orbita attorno al player
-        Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
-        Vector3 offset = rotation * new Vector3(0f, cameraHeight, -cameraDistance);
-        cameraTransform.position = transform.position + offset;
-
-        // La camera guarda sempre verso il player (leggermente sopra i piedi)
-        cameraTransform.LookAt(transform.position + Vector3.up * (cameraHeight * 0.5f));
-    }
-
-    // -----------------------------------------------------------------------
-    // JUMP — Space
-    // -----------------------------------------------------------------------
     private void Jump()
     {
         if (_jumpAction.WasPressedThisFrame() && _isGrounded)
         {
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            if (_animator != null) _animator.SetTrigger("Jump");
         }
     }
 
-    // -----------------------------------------------------------------------
-    // SPRINT — Left Shift (held)
-    // -----------------------------------------------------------------------
-    private void Sprint()
-    {
-        _isSprinting = _sprintAction.IsPressed();
-    }
-
-    // -----------------------------------------------------------------------
-    // DASH
-    // -----------------------------------------------------------------------
     private void Dash()
     {
-        if (!_dashAction.WasPressedThisFrame()) return;
-        if (_isDashing || _isDashOnCooldown) return;
-
+        if (!_dashAction.WasPressedThisFrame() || _isDashing || _isDashOnCooldown) return;
         Vector2 input = _moveAction.ReadValue<Vector2>();
-
-        // Se il player non sta premendo nessun tasto, non esegue il dash
         if (input.magnitude < 0.1f) return;
-
         StartCoroutine(DashCoroutine(input));
     }
 
@@ -206,11 +168,10 @@ public class PlayerController : MonoBehaviour
     {
         _isDashing = true;
         _isDashOnCooldown = true;
+        if (_animator != null) _animator.SetTrigger("Dash");
 
         float dashSpeed = normalSpeed * dashMultiplier;
         float elapsed = 0f;
-
-        // Calcolo la direzione del dash basandomi sull'input e sulla rotazione della camera
         float targetAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg + _yaw;
         Vector3 dashDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
@@ -222,9 +183,20 @@ public class PlayerController : MonoBehaviour
         }
 
         _isDashing = false;
-
-        // Attendo il cooldown prima di permettere un nuovo dash
         yield return new WaitForSeconds(dashCooldown);
         _isDashOnCooldown = false;
+    }
+
+    private void UpdateAnimationParameters()
+    {
+        if (_animator == null) return;
+
+        Vector2 input = _moveAction.ReadValue<Vector2>();
+        float speedValue = input.magnitude;
+        if (_isSprinting && speedValue > 0.1f) speedValue *= sprintMultiplier;
+
+        // I nomi qui sotto devono essere IDENTICI a quelli nell'Animator
+        _animator.SetFloat("Speed", speedValue, 0.1f, Time.deltaTime);
+        _animator.SetBool("isGrounded", _isGrounded);
     }
 }
